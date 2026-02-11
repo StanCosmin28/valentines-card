@@ -815,7 +815,7 @@ export default function App() {
                 onClick={reset}
                 className="flex items-center gap-2 mx-auto text-white/20 hover:text-white/50 transition-colors text-xs uppercase tracking-widest font-bold"
               >
-                <RefreshCw size={12} /> Reia povestea
+                <RefreshCw size={12} /> Reia povestea!
               </button>
             </div>
           </motion.div>
