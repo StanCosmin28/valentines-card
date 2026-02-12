@@ -344,18 +344,15 @@
 //     </div>
 //   );
 // }
-
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Heart,
-  X,
   RefreshCw,
   Sparkles,
   Star,
   Camera,
   Flame,
-  Palette,
   Sun,
   Moon,
   Zap,
@@ -370,13 +367,13 @@ import confetti from "canvas-confetti";
  * CONFIGURARE TEXTE
  */
 const NO_PHRASES = [
-  "Karina, ești gata?",
-  "Sigur nu vrei să vezi? 🥺",
-  "Apasă pe Da... promit că merită 🧸",
-  "Doar un clic distanță de ceva frumos! ✨",
-  "Inima mea insistă... ❤️",
-  "Ultima șansă... 🌹",
-  "Gata, am ascuns butonul de Nu! 😜",
+  "Karina, ești pregătită? 😏",
+  "Sigur vrei să spui «nu» la ceva romantic? 🥺",
+  "Ok brosky… reîncerc: apasă «Da» 👹",
+  "Îți jur că nu e scam… e iubireeee 💘",
+  "Ești încăpățânată… și ador asta 😳",
+  "Ultima șansă, brosky 👹👹👹",
+  "Nu mai există «Nu». Să te văd acum! 👹",
 ];
 
 const MESSAGE = `Draga mea Karina,
@@ -389,6 +386,17 @@ Mulțumesc că ești tu, exact așa cum ești.
 
 Cu toată admirația și dragul, 
 Eu 💖`;
+
+// Countdown config (setează anul dacă vrei)
+const VALENTINE_DATE = new Date("2026-02-14T00:00:00");
+
+const TEASE_MESSAGES = [
+  "Deloc nu ai răbdare 😛",
+  "Hei hei… mai stai puțin 😳",
+  "Curioasă rău… te iubesc 😌💘",
+  "Încă nuuuu… surpriza e aproape 👀",
+  "Mai ai puțin și îl primești 😜",
+];
 
 /**
  * COMPONENTE REUTILIZABILE
@@ -441,13 +449,45 @@ const TypedText = ({ text }) => {
 };
 
 export default function App() {
-  const [scene, setScene] = useState("ask");
+  // START ON COUNTDOWN
+  const [scene, setScene] = useState("countdown"); // "countdown" | "ask" | "charge" | "qualities" | "light" | "memories" | "envelope" | "final"
   const [step, setStep] = useState(0);
   const [noCount, setNoCount] = useState(0);
   const [isEnvelopeOpen, setIsEnvelopeOpen] = useState(false);
   const [isCardOut, setIsCardOut] = useState(false);
   const [lovePower, setLovePower] = useState(0);
   const [customHearts, setCustomHearts] = useState([]);
+
+  // Countdown state
+  const [timeLeft, setTimeLeft] = useState("");
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [teaseMessage, setTeaseMessage] = useState("");
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date();
+      const diff = VALENTINE_DATE.getTime() - now.getTime();
+
+      if (diff <= 0) {
+        setIsUnlocked(true);
+        setTimeLeft("E timpul 💖");
+        clearInterval(interval);
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((diff / (1000 * 60)) % 60);
+      const seconds = Math.floor((diff / 1000) % 60);
+
+      const pad2 = (n) => String(n).padStart(2, "0");
+      setTimeLeft(
+        `${days} zile • ${pad2(hours)}h • ${pad2(minutes)}m • ${pad2(seconds)}s`,
+      );
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleYes = () => {
     confetti({
@@ -480,12 +520,14 @@ export default function App() {
   };
 
   const reset = () => {
-    setScene("ask");
+    // reset flow, but keep countdown unlocked state as-is
+    setScene(isUnlocked ? "ask" : "countdown");
     setStep(0);
     setNoCount(0);
     setIsEnvelopeOpen(false);
     setIsCardOut(false);
     setLovePower(0);
+    setTeaseMessage("");
   };
 
   return (
@@ -495,21 +537,104 @@ export default function App() {
     >
       <GalaxyBackground />
 
-      {/* INDICATOR DE PROGRES SUBTIL */}
-      <div className="fixed top-8 flex gap-1.5 z-50">
-        {Array.from({ length: 7 }).map((_, i) => (
-          <motion.div
-            key={i}
-            animate={{
-              width: i === step ? 24 : 6,
-              backgroundColor: i <= step ? "#f43f5e" : "rgba(255,255,255,0.1)",
-            }}
-            className="h-1 rounded-full transition-all duration-500"
-          />
-        ))}
-      </div>
+      {/* INDICATOR DE PROGRES SUBTIL (ASCUNS PE COUNTDOWN) */}
+      {scene !== "countdown" && (
+        <div className="fixed top-8 flex gap-1.5 z-50">
+          {Array.from({ length: 7 }).map((_, i) => (
+            <motion.div
+              key={i}
+              animate={{
+                width: i === step ? 24 : 6,
+                backgroundColor:
+                  i <= step ? "#f43f5e" : "rgba(255,255,255,0.1)",
+              }}
+              className="h-1 rounded-full transition-all duration-500"
+            />
+          ))}
+        </div>
+      )}
 
       <AnimatePresence mode="wait">
+        {/* SCENA 0: COUNTDOWN */}
+        {scene === "countdown" && (
+          <motion.div
+            key="countdown"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="z-10 text-center px-6 max-w-lg"
+          >
+            <motion.div
+              animate={{ scale: [1, 1.05, 1] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+              className="mb-8 inline-block p-6 bg-white/5 rounded-full border border-white/10"
+            >
+              <Heart size={60} className="text-rose-500" fill="currentColor" />
+            </motion.div>
+
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight">
+              Karina… cadoul tău e aproape 🎁
+            </h1>
+
+            <p className="text-white/50 mb-8 italic">
+              Se deschide doar de Valentine’s Day 💘
+            </p>
+
+            <div className="bg-white/5 border border-white/10 rounded-3xl px-8 py-6 mb-6">
+              <p className="text-white/40 uppercase text-xs tracking-[0.3em] mb-2">
+                Mai este:
+              </p>
+              <p className="text-2xl md:text-3xl font-bold text-rose-200">
+                {timeLeft}
+              </p>
+            </div>
+
+            {!isUnlocked && (
+              <button
+                onClick={() => {
+                  const msg =
+                    TEASE_MESSAGES[
+                      Math.floor(Math.random() * TEASE_MESSAGES.length)
+                    ];
+                  setTeaseMessage(msg);
+                }}
+                className="text-white/40 hover:text-white/70 transition mb-4 text-sm"
+              >
+                Trage cu ochiul 👀
+              </button>
+            )}
+
+            {teaseMessage && (
+              <motion.p
+                key={teaseMessage}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-rose-300 font-medium mb-8"
+              >
+                {teaseMessage}
+              </motion.p>
+            )}
+
+            {isUnlocked ? (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  setStep(0);
+                  setScene("ask");
+                }}
+                className="bg-white text-black px-10 py-4 rounded-full font-bold shadow-xl hover:bg-rose-50 transition-colors"
+              >
+                Vezi cadoul 💖
+              </motion.button>
+            ) : (
+              <p className="text-white/25 text-xs tracking-widest uppercase">
+                Încă nu e timpul… 😌
+              </p>
+            )}
+          </motion.div>
+        )}
+
         {/* SCENA 1: ÎNCEPUTUL */}
         {scene === "ask" && (
           <motion.div
@@ -526,9 +651,11 @@ export default function App() {
             >
               <Heart size={60} className="text-rose-500" fill="currentColor" />
             </motion.div>
+
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-12 tracking-tight">
               {NO_PHRASES[noCount]}
             </h1>
+
             <div className="flex flex-col items-center gap-6">
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -538,6 +665,7 @@ export default function App() {
               >
                 Da, vreau ✨
               </motion.button>
+
               {noCount < 6 && (
                 <button
                   onClick={() => setNoCount(noCount + 1)}
@@ -560,14 +688,16 @@ export default function App() {
             className="z-10 text-center w-full max-md px-10"
           >
             <h2 className="text-2xl font-medium text-rose-100/80 mb-12">
-              Simte energia...
+              Hai să vedem câtă iubire putem strânge 💘
             </h2>
+
             <div className="relative flex items-center justify-center mb-16">
               <motion.div
                 animate={{ scale: [1, 1.1, 1], opacity: [0.1, 0.3, 0.1] }}
                 transition={{ repeat: Infinity, duration: 2 }}
                 className="absolute w-64 h-64 bg-rose-500 rounded-full blur-[80px]"
               />
+
               <motion.button
                 whileTap={{ scale: 0.85 }}
                 onClick={() => {
@@ -583,12 +713,13 @@ export default function App() {
                   className="drop-shadow-lg"
                 />
                 <span className="mt-4 text-white font-bold tracking-widest">
-                  {lovePower}%
+                  {lovePower}% iubire
                 </span>
               </motion.button>
             </div>
+
             <p className="text-white/40 text-xs uppercase tracking-[0.3em]">
-              Apasă repetat pe inimă
+              Apasă pe inimă până ajungem la 100%… dacă poți 😌
             </p>
           </motion.div>
         )}
@@ -605,18 +736,23 @@ export default function App() {
             <h2 className="text-3xl font-bold text-white mb-10 text-center">
               De ce ești specială...
             </h2>
+
             <div className="grid gap-4">
               {[
-                { I: Gem, c: "text-blue-400", t: "Bunătatea ta autentică" },
                 {
-                  I: Palette,
-                  c: "text-purple-400",
-                  t: "Creativitatea care te definește",
+                  I: Gem,
+                  c: "text-blue-400",
+                  t: "Grijulie și atentă… ai mereu grijă în felul tău special 💎",
+                },
+                {
+                  I: Flame,
+                  c: "text-orange-400",
+                  t: "Ambițioasă, matură și descurcăreață… mă inspiri 🎯",
                 },
                 {
                   I: Smile,
-                  c: "text-yellow-400",
-                  t: "Zâmbetul care luminează tot",
+                  c: "text-pink-400",
+                  t: "Deșteaptă, frumoasă și sexy… pur și simplu wow 😳❤️",
                 },
               ].map((item, i) => (
                 <motion.div
@@ -635,6 +771,7 @@ export default function App() {
                 </motion.div>
               ))}
             </div>
+
             <button
               onClick={() => nextStep("light")}
               className="mt-12 w-full py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-white font-bold flex items-center justify-center gap-2 transition-all"
@@ -655,23 +792,47 @@ export default function App() {
           >
             <div className="grid grid-cols-2 gap-4">
               {[
-                { I: Sun, c: "text-orange-300", l: "Căldură" },
-                { I: Moon, c: "text-indigo-300", l: "Liniște" },
-                { I: Zap, c: "text-yellow-300", l: "Energie" },
-                { I: Star, c: "text-rose-100", l: "Magie" },
+                {
+                  I: Sun,
+                  c: "text-orange-300",
+                  l: "Căldură",
+                  d: "Felul în care mă faci să mă simt acasă.",
+                },
+                {
+                  I: Moon,
+                  c: "text-indigo-300",
+                  l: "Calm",
+                  d: "Cu tine, lumea se oprește puțin… și e bine.",
+                },
+                {
+                  I: Zap,
+                  c: "text-yellow-300",
+                  l: "Energie",
+                  d: "Zâmbetul tău îmi dă putere instant.",
+                },
+                {
+                  I: Star,
+                  c: "text-rose-100",
+                  l: "Magie",
+                  d: "Energia ta e ceva ce vreau să am mereu alături.",
+                },
               ].map((m, i) => (
                 <motion.div
                   whileHover={{ y: -5 }}
                   key={i}
-                  className="bg-white/5 aspect-square rounded-[2.5rem] border border-white/10 flex flex-col items-center justify-center gap-4"
+                  className="bg-white/5 aspect-square rounded-[2.5rem] border border-white/10 flex flex-col items-center justify-center gap-3 px-3"
                 >
                   <m.I size={32} className={m.c} />
-                  <span className="text-white/60 text-sm font-bold uppercase tracking-widest">
+                  <span className="text-white/60 text-xs font-bold uppercase tracking-widest">
                     {m.l}
                   </span>
+                  <p className="text-white/40 text-sm text-center px-2 leading-relaxed">
+                    {m.d}
+                  </p>
                 </motion.div>
               ))}
             </div>
+
             <button
               onClick={() => nextStep("memories")}
               className="mt-8 w-full text-rose-300/60 text-sm font-bold flex items-center justify-center gap-2"
@@ -687,6 +848,7 @@ export default function App() {
             <h2 className="text-2xl font-bold text-white mb-8 text-center">
               Momentele noastre...
             </h2>
+
             <div className="space-y-4">
               {[
                 "Prima noastră interacțiune",
@@ -709,6 +871,7 @@ export default function App() {
                 </motion.div>
               ))}
             </div>
+
             <button
               onClick={() => nextStep("envelope")}
               className="mt-12 w-full bg-rose-600 py-4 rounded-full text-white font-bold shadow-lg shadow-rose-900/20"
@@ -741,6 +904,7 @@ export default function App() {
                   />
                 )}
               </AnimatePresence>
+
               <div className="absolute inset-0 flex items-center justify-center text-rose-200/20 uppercase font-black tracking-[0.5em]">
                 Karina
               </div>
@@ -773,6 +937,7 @@ export default function App() {
                   <div className="overflow-y-auto pr-2 custom-scrollbar flex-grow">
                     <TypedText text={MESSAGE} />
                   </div>
+
                   <button
                     onClick={() => nextStep("final")}
                     className="mt-8 bg-black text-white py-4 rounded-full font-bold uppercase text-xs tracking-[0.3em]"
@@ -799,10 +964,13 @@ export default function App() {
                 transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
                 className="absolute -top-20 -right-20 w-40 h-40 bg-rose-500/20 blur-[50px] rounded-full"
               />
+
               <Sparkles className="mx-auto mb-8 text-yellow-400" size={40} />
+
               <h1 className="text-3xl font-bold text-white mb-6">
                 Îmi ești dragă, Karina
               </h1>
+
               <p className="text-rose-100/60 leading-relaxed mb-10 italic font-serif text-lg">
                 "Ești acea notă de frumos care face totul să sune mai bine."
               </p>
